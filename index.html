@@ -177,14 +177,6 @@
   }
   #bar { width: 480px; height: 1px; background: rgba(255,255,255,0.07); }
   #fill { height:100%; background: oklch(68% 0.2 280); width:0%; opacity: 0.6; }
-  #hud-hint {
-    position: fixed; bottom: 28px; left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999; pointer-events: none;
-    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 300;
-    letter-spacing: 0.25em; text-transform: uppercase;
-    color: rgba(240,236,230,0.25);
-  }
 </style>
 </head>
 <body>
@@ -200,8 +192,6 @@
 <div id="hud">
   <div id="bar"><div id="fill"></div></div>
 </div>
-<div id="hud-hint">↑ ↓ · space · navigate</div>
-
 <script>
 // ─────────────────────────────────────────
 //  SCALE
@@ -307,7 +297,7 @@ const BEATS = [
   40.0,  // Stage 6 — number
   40.8,  // Stage 6 — High Performance
   41.6,  // Stage 6 — body
-  43.0,  // Outro
+  44.2,  // Outro — lands just past THANK YOU's focus for slight edge overshoot
 ];
 
 // Build ELEMENTS array
@@ -315,9 +305,9 @@ const ELEMENTS = [];
 
 // ── INTRO ─────────────────────────────────────────────────────
 ELEMENTS.push(
-  { depth:0.5, wx:0, wy:-560, cls:'t-kicker', html:'Key Insights · LAPR4 · ISEP 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
-  { depth:0.8, wx:0, wy:-160, cls:'t-display', html:'DREXLER', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
-  { depth:1.2, wx:0, wy: 200, cls:'t-display-sub', html:'SIBBET MODEL', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:0.5, wx:0, wy:-560, cls:'t-kicker', html:'2DK2 · LAPR4 · ISEP 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:0.8, wx:0, wy:-160, cls:'t-display', html:'KEY INSIGHTS', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:1.2, wx:0, wy: 200, cls:'t-display-sub', html:'FROM INDUSTRY INTERVIEW', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
   { depth:1.6, wx:0, wy: 520, cls:'t-mono-sm', html:'6 stages · scroll to enter', fadeIn:[-2,-0.4], fadeOut:[0.4,1.2] },
 );
 
@@ -403,8 +393,21 @@ clips.forEach(c => {
 
 // ── OUTRO ─────────────────────────────────────────────────────
 ELEMENTS.push(
-  { depth: 43, wx:0, wy:-300, cls:'t-display', html:'THANK YOU', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
-  { depth: 43.5, wx:0, wy:220, cls:'t-kicker', html:'LAPR4 · ISEP · 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  // THANK YOU — pushed further in Z so it doesn't leak into stage 6
+  { depth: 43.8, wx:0, wy:-300, cls:'t-display', html:'THANK YOU',
+    fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+
+  // Course line
+  { depth: 44.2, wx:0, wy: 220, cls:'t-kicker', html:'LAPR4 · ISEP · 2026',
+    fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+
+  // Team credits — uppercase, three-line layout
+  { depth: 44.2, wx:0, wy: 520, cls:'t-mono-sm',
+    html: '1241949 CARLOS FERNANDES &nbsp;·&nbsp; 1240790 CAROLINA OLIVEIRA<br>' +
+          '1240804 INÊS BARBOSA &nbsp;·&nbsp; 1201262 JOÃO MIGUEL<br>' +
+          '1241404 RAFAEL MONTEIRO',
+    style: 'font-size:40px;color:rgba(240,236,230,0.4);line-height:1.9',
+    fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
 );
 
 // ─────────────────────────────────────────
@@ -532,9 +535,6 @@ function prevBeat() {
 }
 
 window.addEventListener('keydown', (e) => {
-  // Don't hijack keys when the user is interacting with a video's controls
-  if (e.target && e.target.tagName === 'VIDEO') return;
-
   const forward  = ['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'];
   const backward = ['ArrowUp',   'ArrowLeft',  'PageUp'];
 
@@ -551,7 +551,7 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     scrollToZ(BEATS[BEATS.length - 1]);
   }
-});
+}, true);  // capture phase — intercept before video element handles it
 </script>
 </body>
 </html>
