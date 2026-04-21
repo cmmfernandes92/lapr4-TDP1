@@ -276,28 +276,28 @@ const CAM_MAX = 45;
 // ─────────────────────────────────────────
 const BEATS = [
   0.8,   // Intro
-  3.0,   // Clip 1
-  5.0,   // Stage 1 — number
+  3.3,   // Clip 1
+  5.2,   // Stage 1 — number
   5.8,   // Stage 1 — Orientation
   6.6,   // Stage 1 — body
-  12.0,  // Stage 2 — number
+  12.2,  // Stage 2 — number
   12.8,  // Stage 2 — Trust Building
   13.6,  // Stage 2 — body
-  17.0,  // Clip 2
-  19.0,  // Stage 3 — number
+  17.3,  // Clip 2
+  19.2,  // Stage 3 — number
   19.8,  // Stage 3 — Goal Clarification
   20.6,  // Stage 3 — body
-  26.0,  // Stage 4 — number
+  26.2,  // Stage 4 — number
   26.8,  // Stage 4 — Commitment
   27.6,  // Stage 4 — body
-  31.0,  // Clip 3
-  33.0,  // Stage 5 — number
+  31.3,  // Clip 3
+  33.2,  // Stage 5 — number
   33.8,  // Stage 5 — Implementation
   34.6,  // Stage 5 — body
-  40.0,  // Stage 6 — number
+  40.2,  // Stage 6 — number
   40.8,  // Stage 6 — High Performance
   41.6,  // Stage 6 — body
-  44.2,  // Outro — lands just past THANK YOU's focus for slight edge overshoot
+  44.1,  // Outro — lands just past THANK YOU's focus for slight edge overshoot
 ];
 
 // Build ELEMENTS array
@@ -305,7 +305,7 @@ const ELEMENTS = [];
 
 // ── INTRO ─────────────────────────────────────────────────────
 ELEMENTS.push(
-  { depth:0.5, wx:0, wy:-560, cls:'t-kicker', html:'2DK2 · LAPR4 · ISEP 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:0.6, wx:0, wy:-560, cls:'t-kicker', html:'2DK2 · LAPR4 · ISEP 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
   { depth:0.8, wx:0, wy:-160, cls:'t-display', html:'KEY INSIGHTS', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
   { depth:1.2, wx:0, wy: 200, cls:'t-display-sub', html:'FROM INDUSTRY INTERVIEW', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
   { depth:1.6, wx:0, wy: 520, cls:'t-mono-sm', html:'6 stages · scroll to enter', fadeIn:[-2,-0.4], fadeOut:[0.4,1.2] },
@@ -374,10 +374,12 @@ clips.forEach(c => {
   ELEMENTS.push({
     depth: c.depth, wx: 0, wy: 0,
     cls: '',
-    html: `<video src="${c.file}" controls playsinline preload="metadata"
-             style="width:1920px;height:1080px;background:#0d0d1e;
-                    border:2px solid rgba(124,111,239,0.25);
-                    pointer-events:auto;"></video>`,
+    html: `<div style="width:1920px;height:auto;
+                    display:flex;align-items:center;justify-content:center;
+                    pointer-events:auto;">
+             <video src="${c.file}" controls playsinline preload="metadata"
+               style="max-width:100%;display:block;"></video>
+           </div>`,
     fadeIn: [-2.2, -0.6],
     fadeOut: [ 0.5,  1.6],
   });
