@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>lapr4 TDP — Drexler-Sibbet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=DM+Sans:ital,wght@0,200;0,300;0,400;1,300&display=swap" rel="stylesheet">
+
+<template id="__bundler_thumbnail" data-bg-color="#07070c">
+  <svg viewBox="0 0 120 68" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="68" fill="#07070c"/>
+    <circle cx="60" cy="34" r="28" fill="none" stroke="#7c6fef" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="60" cy="34" r="16" fill="none" stroke="#7c6fef" stroke-width="0.5" opacity="0.5"/>
+    <circle cx="60" cy="34" r="6"  fill="none" stroke="#7c6fef" stroke-width="1"   opacity="0.9"/>
+    <circle cx="60" cy="34" r="1.5" fill="#7c6fef"/>
+    <text x="60" y="38" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#f0ece6" opacity="0.7" letter-spacing="2">TDP</text>
+  </svg>
+</template>
+
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#07070c; overflow-x:hidden; }
+
+  #track { height: 1400vh; }
+
+  #stage {
+    position: fixed;
+    top:0; left:0;
+    width: 3840px; height: 2160px;
+    transform-origin: top left;
+    overflow: hidden;
+    background: radial-gradient(ellipse 70% 70% at 50% 50%, #0d0d1e 0%, #07070c 100%);
+  }
+
+  #vignette {
+    position: absolute; inset: 0; pointer-events: none; z-index: 500;
+    background: radial-gradient(ellipse 50% 50% at 50% 50%,
+      transparent 25%, rgba(7,7,12,0.5) 65%, rgba(7,7,12,0.96) 100%);
+  }
+
+  #grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 480px 270px;
+  }
+
+  #centerline-h {
+    position: absolute; top:50%; left:0; right:0; height:1px;
+    background: rgba(124,111,239,0.06); pointer-events:none;
+  }
+  #centerline-v {
+    position: absolute; left:50%; top:0; bottom:0; width:1px;
+    background: rgba(124,111,239,0.06); pointer-events:none;
+  }
+
+  .el {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform-origin: center center;
+    will-change: transform, opacity;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ── TYPE ── */
+  .t-kicker {
+    font-family: 'DM Mono', monospace;
+    font-size: 44px; font-weight: 300;
+    letter-spacing: 0.32em; text-transform: uppercase;
+    color: oklch(68% 0.2 280);
+  }
+  .t-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 420px; letter-spacing: 0.04em; line-height: 0.95;
+    color: #f0ece6; text-align: center;
+  }
+  .t-display-sub {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 180px; letter-spacing: 0.06em;
+    color: oklch(68% 0.2 280); text-align: center;
+  }
+  .t-stage-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 560px; line-height: 1;
+    color: rgba(124,111,239,0.12); letter-spacing: -0.02em;
+  }
+  .t-stage-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 280px; letter-spacing: 0.05em; line-height: 1;
+    color: #f0ece6; text-align: center; white-space: nowrap;
+  }
+  .t-stage-q {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 72px; font-style: italic; font-weight: 300;
+    color: oklch(68% 0.2 280); text-align: center; letter-spacing: 0.01em;
+  }
+  .t-stage-body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 60px; font-weight: 200; line-height: 1.6;
+    color: rgba(240,236,230,0.45); text-align: center;
+    max-width: 2000px; white-space: normal;
+  }
+  .t-mono-sm {
+    font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 300;
+    color: rgba(240,236,230,0.25); letter-spacing: 0.18em; text-align:center;
+  }
+  .h-line {
+    width: 900px; height: 2px;
+    background: linear-gradient(90deg, transparent, oklch(68% 0.2 280), transparent);
+  }
+  .h-line-faint {
+    width: 600px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(240,236,230,0.15), transparent);
+  }
+
+  /* ── VIDEO PLACEHOLDER ── */
+  .video-ph {
+    width: 1920px; height: 1080px;
+    border: 2px solid rgba(124,111,239,0.25);
+    background: rgba(13,13,30,0.8);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 40px;
+    position: relative; overflow: hidden;
+  }
+  .video-ph::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 80px,
+      rgba(124,111,239,0.03) 80px, rgba(124,111,239,0.03) 82px
+    );
+  }
+  .play-ring {
+    width: 240px; height: 240px; border-radius: 50%;
+    border: 3px solid rgba(124,111,239,0.5);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .play-tri {
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 48px 0 48px 88px;
+    border-color: transparent transparent transparent rgba(124,111,239,0.7);
+    margin-left: 20px;
+  }
+  .video-label {
+    font-family: 'DM Mono', monospace; font-size: 40px; font-weight: 300;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(124,111,239,0.5); position: relative; z-index: 1;
+  }
+  .video-corner {
+    position: absolute; width: 60px; height: 60px;
+    border-color: rgba(124,111,239,0.35); border-style: solid;
+  }
+  .vc-tl { top:24px; left:24px; border-width:2px 0 0 2px; }
+  .vc-tr { top:24px; right:24px; border-width:2px 2px 0 0; }
+  .vc-bl { bottom:24px; left:24px; border-width:0 0 2px 2px; }
+  .vc-br { bottom:24px; right:24px; border-width:0 2px 2px 0; }
+
+  /* ── STAGE NUMBER BADGE ── */
+  .stage-badge {
+    display: flex; align-items: center; justify-content: center;
+    width: 180px; height: 180px;
+    background: oklch(68% 0.2 280);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 130px; color: #07070c; line-height: 1;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: fixed; bottom: 56px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999; pointer-events: none;
+  }
+  #bar { width: 480px; height: 1px; background: rgba(255,255,255,0.07); }
+  #fill { height:100%; background: oklch(68% 0.2 280); width:0%; opacity: 0.6; }
+  #hud-hint {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999; pointer-events: none;
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 300;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(240,236,230,0.25);
+  }
+</style>
+</head>
+<body>
+<div id="track">
+  <div id="stage">
+    <div id="grid"></div>
+    <div id="centerline-h"></div>
+    <div id="centerline-v"></div>
+    <div id="vignette"></div>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="bar"><div id="fill"></div></div>
+</div>
+<div id="hud-hint">↑ ↓ · space · navigate</div>
+
+<script>
+// ─────────────────────────────────────────
+//  SCALE
+// ─────────────────────────────────────────
+const DESIGN_W = 3840, DESIGN_H = 2160;
+const stage = document.getElementById('stage');
+function scaleStage() {
+  const s = Math.min(window.innerWidth/DESIGN_W, window.innerHeight/DESIGN_H);
+  const ox = (window.innerWidth  - DESIGN_W*s)/2;
+  const oy = (window.innerHeight - DESIGN_H*s)/2;
+  stage.style.transform = `translate(${ox}px,${oy}px) scale(${s})`;
+}
+scaleStage();
+window.addEventListener('resize', scaleStage);
+
+// ─────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────
+function videoPlaceholder(label) {
+  return `<div class="video-ph">
+    <div class="video-corner vc-tl"></div>
+    <div class="video-corner vc-tr"></div>
+    <div class="video-corner vc-bl"></div>
+    <div class="video-corner vc-br"></div>
+    <div class="play-ring"><div class="play-tri"></div></div>
+    <div class="video-label">${label}</div>
+  </div>`;
+}
+
+function stageBadge(n) {
+  return `<div class="stage-badge">${n}</div>`;
+}
+
+// ─────────────────────────────────────────
+//  SCENE DATA
+//  depth: camera Z when element is "in focus"
+//  wx/wy: world offset from center
+//  fadeIn/fadeOut: [start,end] relZ ranges
+// ─────────────────────────────────────────
+
+// Each stage uses ~6 depth units:
+//   D+0: video placeholder
+//   D+3: stage title + body
+
+const stages = [
+  {
+    n:1, title:'Orientation', q:'Why are we here?',
+    body:'Mission isn\'t fixed — roadmaps, quarterly reviews and stakeholder input keep it evolving. Teams must expect and accept continuous change.',
+    D: 3
+  },
+  {
+    n:2, title:'Trust Building', q:'Who are you?',
+    body:'Dailies, retros, 1-on-1s and peer code review build constant feedback loops. Constructive challenge — not ego — is what makes trust real.',
+    D: 10
+  },
+  {
+    n:3, title:'Goal Clarification', q:'What are we doing?',
+    body:'When requirements are unclear, anchor on foundation work. Don\'t over-invest in what hasn\'t been decided yet — balance focus on what is certain.',
+    D: 17
+  },
+  {
+    n:4, title:'Commitment', q:'How will we do it?',
+    body:'Everyone can push back, but ownership scales with experience. Senior engineers carry disproportionate responsibility for keeping things on track.',
+    D: 24
+  },
+  {
+    n:5, title:'Implementation', q:'Who does what?',
+    body:'High performance = process maturity + short feedback loops + knowledge sharing. Weekly tech-only sessions (no PM) are underrated but effective.',
+    D: 31
+  },
+  {
+    n:6, title:'High Performance', q:'Wow!',
+    body:'Deadline pressure is normal — what separates teams is preparation and monitoring. Senior members carry institutional knowledge that prevents failure at go-live.',
+    D: 38
+  },
+];
+
+const CAM_MAX = 45;
+
+// ─────────────────────────────────────────
+//  BEATS — keyboard navigation stops
+// ─────────────────────────────────────────
+const BEATS = [
+  0.8,   // Intro
+  3.0,   // Clip 1
+  5.0,   // Stage 1 — number
+  5.8,   // Stage 1 — Orientation
+  6.6,   // Stage 1 — body
+  12.0,  // Stage 2 — number
+  12.8,  // Stage 2 — Trust Building
+  13.6,  // Stage 2 — body
+  17.0,  // Clip 2
+  19.0,  // Stage 3 — number
+  19.8,  // Stage 3 — Goal Clarification
+  20.6,  // Stage 3 — body
+  26.0,  // Stage 4 — number
+  26.8,  // Stage 4 — Commitment
+  27.6,  // Stage 4 — body
+  31.0,  // Clip 3
+  33.0,  // Stage 5 — number
+  33.8,  // Stage 5 — Implementation
+  34.6,  // Stage 5 — body
+  40.0,  // Stage 6 — number
+  40.8,  // Stage 6 — High Performance
+  41.6,  // Stage 6 — body
+  43.0,  // Outro
+];
+
+// Build ELEMENTS array
+const ELEMENTS = [];
+
+// ── INTRO ─────────────────────────────────────────────────────
+ELEMENTS.push(
+  { depth:0.5, wx:0, wy:-560, cls:'t-kicker', html:'Key Insights · LAPR4 · ISEP 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:0.8, wx:0, wy:-160, cls:'t-display', html:'DREXLER', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:1.2, wx:0, wy: 200, cls:'t-display-sub', html:'SIBBET MODEL', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth:1.6, wx:0, wy: 520, cls:'t-mono-sm', html:'6 stages · scroll to enter', fadeIn:[-2,-0.4], fadeOut:[0.4,1.2] },
+);
+
+// ── STAGES ────────────────────────────────────────────────────
+stages.forEach(s => {
+  const D = s.D;
+  const FI = [-2.2, -0.6];
+  const FO = [0.5, 1.6];
+
+  // TRANSITION LABEL between video & stage
+  ELEMENTS.push({
+    depth: D + 0.8, wx: 0, wy: 780,
+    cls: 't-mono-sm', html: `Stage ${s.n} →`,
+    fadeIn: [-1.0, -0.2], fadeOut: [0.2, 0.9],
+  });
+
+  // GHOST NUMBER
+  ELEMENTS.push({
+    depth: D + 2.0, wx: -300, wy: -100,
+    cls: 't-stage-num', html: s.n,
+    fadeIn: [-2.5, -1.0], fadeOut: [0.3, 1.2],
+  });
+
+  // TITLE
+  ELEMENTS.push({
+    depth: D + 2.8, wx: 0, wy: -380,
+    cls: 't-stage-title', html: s.title.toUpperCase(),
+    fadeIn: [-1.8, -0.5], fadeOut: [0.5, 1.5],
+  });
+
+  // QUESTION
+  ELEMENTS.push({
+    depth: D + 3.1, wx: 0, wy: -60,
+    cls: 't-stage-q', html: s.q,
+    fadeIn: [-1.8, -0.5], fadeOut: [0.5, 1.5],
+  });
+
+  // DIVIDER
+  ELEMENTS.push({
+    depth: D + 3.3, wx: 0, wy: 140,
+    cls: 'h-line', html: '',
+    fadeIn: [-1.8, -0.5], fadeOut: [0.5, 1.5],
+  });
+
+  // BODY
+  ELEMENTS.push({
+    depth: D + 3.6, wx: 0, wy: 420,
+    cls: 't-stage-body', html: s.body,
+    fadeIn: [-1.8, -0.5], fadeOut: [0.5, 1.5],
+  });
+});
+
+// ── CLIPS ────────────────────────────────────────────────────
+// 3 clips — each appears before a pair of stages.
+// Not muted, no autoplay — presenter clicks play during the talk.
+const clips = [
+  { file: 'videos/clip1.mp4', depth: 3,  n: 1, label: 'Asking for help'   },
+  { file: 'videos/clip2.mp4', depth: 17, n: 2, label: 'Goal uncertainty'  },
+  { file: 'videos/clip3.mp4', depth: 31, n: 3, label: 'Knowledge sharing' },
+];
+
+clips.forEach(c => {
+  // The video itself
+  ELEMENTS.push({
+    depth: c.depth, wx: 0, wy: 0,
+    cls: '',
+    html: `<video src="${c.file}" controls playsinline preload="metadata"
+             style="width:1920px;height:1080px;background:#0d0d1e;
+                    border:2px solid rgba(124,111,239,0.25);
+                    pointer-events:auto;"></video>`,
+    fadeIn: [-2.2, -0.6],
+    fadeOut: [ 0.5,  1.6],
+  });
+
+  // Caption under the clip
+  ELEMENTS.push({
+    depth: c.depth + 0.8, wx: 0, wy: 780,
+    cls: 't-mono-sm', html: `Clip ${c.n} — ${c.label}`,
+    fadeIn: [-1.0, -0.2],
+    fadeOut: [ 0.2,  0.9],
+  });
+});
+
+// ── OUTRO ─────────────────────────────────────────────────────
+ELEMENTS.push(
+  { depth: 43, wx:0, wy:-300, cls:'t-display', html:'THANK YOU', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+  { depth: 43.5, wx:0, wy:220, cls:'t-kicker', html:'LAPR4 · ISEP · 2026', fadeIn:[-2,-0.4], fadeOut:[0.5,1.5] },
+);
+
+// ─────────────────────────────────────────
+//  BUILD DOM
+// ─────────────────────────────────────────
+const domEls = ELEMENTS.map(def => {
+  const div = document.createElement('div');
+  div.className = 'el' + (def.cls ? ' ' + def.cls : '');
+  div.innerHTML = def.html;
+  if (def.style) {
+    def.style.split(';').forEach(rule => {
+      const [k,v] = rule.split(':');
+      if (k && v) div.style[k.trim()] = v.trim();
+    });
+  }
+  stage.insertBefore(div, document.getElementById('vignette'));
+  return div;
+});
+
+// ─────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────
+const ZOOM_K = 1.85;
+
+const hudFill   = document.getElementById('fill');
+
+function render() {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const rawT = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+  const camZ = rawT * CAM_MAX;
+
+  hudFill.style.width = (rawT * 100) + '%';
+
+  ELEMENTS.forEach((def, i) => {
+    const el = domEls[i];
+    const relZ = camZ - def.depth;
+
+    const fi = def.fadeIn  || [-1.8, -0.5];
+    const fo = def.fadeOut || [ 0.4,  1.4];
+    let opacity = 0;
+    if (relZ >= fi[0] && relZ < fi[1]) {
+      opacity = (relZ - fi[0]) / (fi[1] - fi[0]);
+    } else if (relZ >= fi[1] && relZ <= fo[0]) {
+      opacity = 1;
+    } else if (relZ > fo[0] && relZ <= fo[1]) {
+      opacity = 1 - (relZ - fo[0]) / (fo[1] - fo[0]);
+    }
+
+    if (opacity <= 0.001) {
+      el.style.opacity = 0;
+      return;
+    }
+
+    const scale = Math.exp(relZ * ZOOM_K);
+    const sx = def.wx * scale;
+    const sy = def.wy * scale;
+
+    el.style.opacity   = opacity;
+    el.style.transform = `translate(calc(-50% + ${sx}px), calc(-50% + ${sy}px)) scale(${scale})`;
+  });
+
+  // Pause any playing clip once the camera moves past it.
+  // (No autoplay — presenter clicks play manually.)
+  domEls.forEach(el => {
+    const v = el.querySelector('video');
+    if (!v || v.paused) return;
+    const rect = el.getBoundingClientRect();
+    const offscreen =
+      rect.bottom < 0 || rect.top > window.innerHeight ||
+      rect.right  < 0 || rect.left > window.innerWidth ||
+      parseFloat(el.style.opacity || '0') < 0.3;
+    if (offscreen) v.pause();
+  });
+
+  requestAnimationFrame(render);
+}
+render();
+
+// ─────────────────────────────────────────
+//  KEYBOARD NAVIGATION
+// ─────────────────────────────────────────
+const EPS = 0.15;  // tolerance for "am I already at this beat"
+let tweening = false;
+
+function currentCamZ() {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  return (window.scrollY / maxScroll) * CAM_MAX;
+}
+
+function scrollToZ(z, duration = 700) {
+  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+  const targetY = (z / CAM_MAX) * maxScroll;
+  const startY  = window.scrollY;
+  const delta   = targetY - startY;
+  if (Math.abs(delta) < 1) return;
+
+  tweening = true;
+  const start = performance.now();
+
+  function step(now) {
+    const t = Math.min(1, (now - start) / duration);
+    // ease-in-out cubic
+    const eased = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+    window.scrollTo(0, startY + delta * eased);
+    if (t < 1) requestAnimationFrame(step);
+    else tweening = false;
+  }
+  requestAnimationFrame(step);
+}
+
+function nextBeat() {
+  const z = currentCamZ();
+  for (let i = 0; i < BEATS.length; i++) {
+    if (BEATS[i] > z + EPS) return scrollToZ(BEATS[i]);
+  }
+  scrollToZ(BEATS[BEATS.length - 1]);
+}
+
+function prevBeat() {
+  const z = currentCamZ();
+  for (let i = BEATS.length - 1; i >= 0; i--) {
+    if (BEATS[i] < z - EPS) return scrollToZ(BEATS[i]);
+  }
+  scrollToZ(BEATS[0]);
+}
+
+window.addEventListener('keydown', (e) => {
+  // Don't hijack keys when the user is interacting with a video's controls
+  if (e.target && e.target.tagName === 'VIDEO') return;
+
+  const forward  = ['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'];
+  const backward = ['ArrowUp',   'ArrowLeft',  'PageUp'];
+
+  if (forward.includes(e.key)) {
+    e.preventDefault();
+    nextBeat();
+  } else if (backward.includes(e.key)) {
+    e.preventDefault();
+    prevBeat();
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    scrollToZ(BEATS[0]);
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    scrollToZ(BEATS[BEATS.length - 1]);
+  }
+});
+</script>
+</body>
+</html>
